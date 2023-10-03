@@ -14,6 +14,8 @@ builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres"));
 });
 
+
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddMvc().ConfigureApiBehaviorOptions(options =>
 {
     options.InvalidModelStateResponseFactory = (errorContext) =>
@@ -39,7 +41,6 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    Console.WriteLine("Teste");
     app.UseSwagger();
     app.UseSwaggerUI();
 }

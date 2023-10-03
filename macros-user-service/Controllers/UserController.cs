@@ -5,6 +5,9 @@ using macros_user_service.Entity;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using System.Diagnostics;
+using System.Net.Mail;
 using System.Security.Cryptography;
 
 namespace macros_user_service.Controllers
@@ -22,31 +25,30 @@ namespace macros_user_service.Controllers
 
 
         [HttpGet]
-        public ActionResult<string> ReadUser()
+        [Route("check")]
+        public ActionResult<string> CheckUserService()
         {
-            return Ok("Vivasso");
+            return Ok(new BaseResponse() { Message = $"The service is up and running since {Process.GetCurrentProcess().StartTime.ToString("MM/dd/yyyy H:mm:ss")}"});
         }
 
         [HttpPost]
         public async Task<ActionResult<BaseResponse<User>>> CreateUser([FromBody] CreateUserRequest body)
         {
-            DateTime time = DateTime.Now;
+            var time = DateTime.Now;
+
             User? sameUsernameUser = await _context.Users.FirstOrDefaultAsync(i => i.Username == body.Username);
 
-            if(sameUsernameUser != null)
+            if (sameUsernameUser != null)
             {
                 return BadRequest(new BaseResponse() { Message = "A user with the informed username is already registered." });
             }
-            Console.WriteLine($"Username check: {(DateTime.Now - time).TotalSeconds}");
-            
-            time = DateTime.Now;
+
             User? sameEmailUser = await _context.Users.FirstOrDefaultAsync(i => i.Email == body.Email);
 
             if (sameEmailUser != null)
             {
                 return BadRequest(new BaseResponse() { Message = "A user with the informed e-mail is already registered." });
             }
-            Console.WriteLine($"Email check: {(DateTime.Now - time).TotalSeconds}");
 
             User user = new User()
             {
@@ -65,19 +67,17 @@ namespace macros_user_service.Controllers
                 UserId = user.UserId,
                 CreatedAt = DateTime.UtcNow,
             };
-            time = DateTime.Now;
-            _context.Users.Add(user);
-            Console.WriteLine($"User insert: {(DateTime.Now - time).TotalSeconds}");
+            try
+            {
+                _context.Users.Add(user);
+                _context.Passwords.Add(password);
 
-            time = DateTime.Now;
-            _context.Passwords.Add(password);
-            Console.WriteLine($"Password insert: {(DateTime.Now - time).TotalSeconds}");
-
-            time = DateTime.Now;
-            int entries = await _context.SaveChangesAsync();
-            Console.WriteLine($"Db save: {(DateTime.Now - time).TotalSeconds}");
-
-            Console.WriteLine($"Entries: {entries}");
+                int entries = await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new BaseResponse() { Message = "Something occurred while saving the changes to the database. Check the request or try again later." });
+            }
 
             return CreatedAtAction(nameof(CreateUser), new BaseResponse<User>() { Message = "Success.", Content = user });
         }

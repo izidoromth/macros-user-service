@@ -12,7 +12,7 @@ using macros_user_service.Contexts;
 namespace macros_user_service.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    [Migration("20231002171533_usermigration")]
+    [Migration("20231003150411_usermigration")]
     partial class usermigration
     {
         /// <inheritdoc />
@@ -77,6 +77,12 @@ namespace macros_user_service.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("UserId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
