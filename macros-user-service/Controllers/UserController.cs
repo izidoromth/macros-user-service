@@ -1,5 +1,5 @@
 ﻿using macros_user_service.Contexts;
-using macros_user_service.Data;
+using macros_user_service.Data.Request;
 using macros_user_service.Data.Response;
 using macros_user_service.Entity;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
@@ -13,7 +13,7 @@ using System.Security.Cryptography;
 namespace macros_user_service.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("/")]
     public class UserController : ControllerBase
     {
         private readonly UserDbContext _context;
@@ -32,6 +32,7 @@ namespace macros_user_service.Controllers
         }
 
         [HttpPost]
+        [Route("create")]
         public async Task<ActionResult<BaseResponse<User>>> CreateUser([FromBody] CreateUserRequest body)
         {
             var time = DateTime.Now;
@@ -81,5 +82,12 @@ namespace macros_user_service.Controllers
 
             return CreatedAtAction(nameof(CreateUser), new BaseResponse<User>() { Message = "Success.", Content = user });
         }
+
+        //[HttpPost]
+        //[Route("updatepassword")]
+        //public ActionResult<BaseResponse> UpdatePassword()
+        //{
+
+        //}
     }
 }

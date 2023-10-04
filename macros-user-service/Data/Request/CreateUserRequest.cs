@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace macros_user_service.Data
+namespace macros_user_service.Data.Request
 {
     public class CreateUserRequest
     {
@@ -16,5 +16,9 @@ namespace macros_user_service.Data
         [Required]
         [RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$", ErrorMessage = "The password must have at least 8 characters, one number, one special character, one uppercase and one lowercase letter")]
         public string Password { get; set; }
+        [Required]
+        //[RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$", ErrorMessage = "The password must have at least 8 characters, one number, one special character, one uppercase and one lowercase letter")]
+        [Compare("Password", ErrorMessage = "The passwords informed don't match.")]
+        public string ConfirmPassword { get; set; }
     }
 }
