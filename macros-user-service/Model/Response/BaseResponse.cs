@@ -1,4 +1,4 @@
-﻿namespace macros_user_service.Data.Response
+﻿namespace macros_user_service.Model.Response
 {
     public class BaseResponse<T>
     {

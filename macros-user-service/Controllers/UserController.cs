@@ -1,6 +1,6 @@
 ﻿using macros_user_service.Contexts;
-using macros_user_service.Data.Request;
-using macros_user_service.Data.Response;
+using macros_user_service.Model.Request;
+using macros_user_service.Model.Response;
 using macros_user_service.Entity;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
@@ -33,18 +33,18 @@ namespace macros_user_service.Controllers
 
         [HttpPost]
         [Route("create")]
-        public async Task<ActionResult<BaseResponse<User>>> CreateUser([FromBody] CreateUserRequest body)
+        public async Task<ActionResult<BaseResponse<User>>> CreateUser([FromBody] CreateUserRequest req)
         {
             var time = DateTime.Now;
 
-            User? sameUsernameUser = await _context.Users.FirstOrDefaultAsync(i => i.Username == body.Username);
+            User? sameUsernameUser = await _context.Users.FirstOrDefaultAsync(i => i.Username == req.Username);
 
             if (sameUsernameUser != null)
             {
                 return BadRequest(new BaseResponse() { Message = "A user with the informed username is already registered." });
             }
 
-            User? sameEmailUser = await _context.Users.FirstOrDefaultAsync(i => i.Email == body.Email);
+            User? sameEmailUser = await _context.Users.FirstOrDefaultAsync(i => i.Email == req.Email);
 
             if (sameEmailUser != null)
             {
@@ -53,16 +53,16 @@ namespace macros_user_service.Controllers
 
             User user = new User()
             {
-                Username = body.Username,
-                Email = body.Email,
-                FirstName = body.FirstName,
-                LastName = body.LastName,
+                Username = req.Username,
+                Email = req.Email,
+                FirstName = req.FirstName,
+                LastName = req.LastName,
             };
 
             byte[] salt = RandomNumberGenerator.GetBytes(16);
             Password password = new Password()
             {
-                Hash = Convert.ToBase64String(KeyDerivation.Pbkdf2(body.Password, salt, KeyDerivationPrf.HMACSHA256, 1000000, 32)),
+                Hash = Convert.ToBase64String(KeyDerivation.Pbkdf2(req.Password, salt, KeyDerivationPrf.HMACSHA256, 1000000, 32)),
                 Active = true,
                 Salt = salt,
                 UserId = user.UserId,
@@ -75,19 +75,40 @@ namespace macros_user_service.Controllers
 
                 int entries = await _context.SaveChangesAsync();
             }
-            catch (Exception ex)
+            catch
             {
                 return BadRequest(new BaseResponse() { Message = "Something occurred while saving the changes to the database. Check the request or try again later." });
             }
 
-            return CreatedAtAction(nameof(CreateUser), new BaseResponse<User>() { Message = "Success.", Content = user });
+            return Ok(new BaseResponse<User>() { Message = "Success.", Content = user });
         }
 
-        //[HttpPost]
-        //[Route("updatepassword")]
-        //public ActionResult<BaseResponse> UpdatePassword()
-        //{
 
-        //}
+
+        [HttpPost]
+        [Route("login")]
+        public async Task<ActionResult<BaseResponse>> Login(LoginRequest req)
+        {
+            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Username == req.Identifier || u.Email == req.Identifier);
+            if (user == null)
+            {
+                return BadRequest(new BaseResponse() { Message = "It seems that there's no account associated with the username informed." });
+            }
+
+            Password? activePassword = await _context.Passwords.FirstOrDefaultAsync(p => p.Active && p.UserId == user.UserId);
+            if(activePassword == null)
+            {
+                return BadRequest(new BaseResponse() { Message = "The user seems to not have an active password." });
+            }
+
+            if (activePassword.Hash == Convert.ToBase64String(KeyDerivation.Pbkdf2(req.Password, activePassword.Salt, KeyDerivationPrf.HMACSHA256, 1000000, 32)))
+            {
+                return Ok(new BaseResponse<User>() { Message = "User authenticated.", Content = user });
+            }
+            else
+            {
+                return BadRequest(new BaseResponse() { Message = "Wrong password." });
+            }
+        }
     }
 }
