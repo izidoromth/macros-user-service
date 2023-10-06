@@ -5,10 +5,12 @@ using macros_user_service.Entity;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using System.Diagnostics;
-using System.Net.Mail;
+//using System.Net.Mail;
 using System.Security.Cryptography;
+//using MimeKit;
+//using System.Net;
+//using System;
 
 namespace macros_user_service.Controllers
 {
@@ -87,7 +89,7 @@ namespace macros_user_service.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<ActionResult<BaseResponse>> Login(LoginRequest req)
+        public async Task<ActionResult<BaseResponse>> Login([FromBody] LoginRequest req)
         {
             User? user = await _context.Users.FirstOrDefaultAsync(u => u.Username == req.Identifier || u.Email == req.Identifier);
             if (user == null)
@@ -110,5 +112,56 @@ namespace macros_user_service.Controllers
                 return BadRequest(new BaseResponse() { Message = "Wrong password." });
             }
         }
+
+        //[HttpPost]
+        //[Route("/password/ask")]
+        //public async Task<ActionResult<BaseResponse>> AskChangePassword([FromBody] AskChangePasswordRequest req)
+        //{
+        //    var email = new MailMessage();
+
+        //    email.From = new MailAddress("sender@email.com", "Sender Name");
+        //    email.To = "asd"; // = new MailAddressCollection() { new MailAddress("", "") };
+        //        //("receiver@email.com", "Receiver Name");
+
+        //    email.Subject = "Testing out email sending";
+        //    email.Body = HttpContent(url);
+        //    email.BodyFormat = MailFormat.Html;
+        //}
+
+        ////screen scrape a page here
+        //private string HttpContent(string url)
+        //{
+        //    WebRequest objRequest = System.Net.HttpWebRequest.Create(url);
+        //    StreamReader sr = new StreamReader(objRequest.GetResponse().GetResponseStream());
+        //    string result = sr.ReadToEnd();
+        //    sr.Close();
+        //    return result;
+        //}
+
+        //[HttpPost]
+        //[Route("/password/reset")]
+        //public async Task<ActionResult<BaseResponse>> ChangePassword([FromBody] ChangePasswordRequest req)
+        //{
+        //    //User? user = await _context.Users.FirstOrDefaultAsync(u => u.Username == req.Identifier || u.Email == req.Identifier);
+
+        //    //if(user == null)
+        //    //{
+        //    //    return BadRequest(new BaseResponse { Message = "No user was found with the informed identifier." });
+        //    //}
+
+        //    List<Password> oldPasswords = _context.Passwords.Where(p => p.UserId == user.UserId).ToList();
+
+        //    foreach(Password oldPassword in oldPasswords)
+        //    {
+        //        string newPasswordHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(req.NewPassword, oldPassword.Salt, KeyDerivationPrf.HMACSHA256, 1000000, 32));
+        //        if (newPasswordHash == oldPassword.Hash)
+        //        {
+        //            return BadRequest(new BaseResponse { Message = "The password informed was already used previoulsy. You need a new password to complete the request." });
+        //        }
+        //    }
+
+        //    //Password? oldPassword = _context.Passwords.FirstOrDefault(p => p.Active && p.UserId == user.UserId);
+
+        //}
     }
 }
